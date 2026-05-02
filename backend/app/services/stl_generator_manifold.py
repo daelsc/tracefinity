@@ -442,6 +442,12 @@ def _make_finger_holes(
                     cutter = mf.Manifold.sphere(r, circular_segments=ROUND_SEGS).translate(
                         (fh_x, fh_y, sphere_z)
                     )
+                elif shape == 'cylinder':
+                    r = fh.radius_mm
+                    cutter = (
+                        mf.Manifold.cylinder(pocket_depth + 0.01, r, circular_segments=ROUND_SEGS)
+                        .translate((fh_x, fh_y, wall_top_z - pocket_depth))
+                    )
                 elif shape == 'square':
                     size = fh.radius_mm * 2
                     cut_z = wall_top_z - pocket_depth / 2
@@ -498,7 +504,7 @@ def _make_finger_hole_chamfers(
             if eff_chamfer <= 0:
                 continue
             try:
-                if shape == 'circle':
+                if shape == 'circle' or shape == 'cylinder':
                     r = fh.radius_mm
                     cs = mf.CrossSection.circle(r, circular_segments=ROUND_SEGS)
                     cs_outer = cs.offset(eff_chamfer, mf.JoinType.Round)
