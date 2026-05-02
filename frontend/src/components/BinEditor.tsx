@@ -15,6 +15,8 @@ interface Props {
   gridX: number
   gridY: number
   wallThickness: number
+  defaultCutoutDepth: number
+  maxCutoutDepth: number
   onEditTool?: (toolId: string) => void
   smoothedToolIds?: Set<string>
   onToggleSmoothed?: (toolId: string, smoothed: boolean) => void
@@ -45,6 +47,8 @@ export function BinEditor({
   gridX,
   gridY,
   wallThickness,
+  defaultCutoutDepth,
+  maxCutoutDepth,
   onEditTool,
   smoothedToolIds,
   onToggleSmoothed,
@@ -458,6 +462,12 @@ export function BinEditor({
     }))
   }
 
+  const setCutoutDepthOverride = (toolId: string, depth: number | null) => {
+    onPlacedToolsChange(placedTools.map(t =>
+      t.id === toolId ? { ...t, depth_override: depth } : t
+    ))
+  }
+
   const handleEditingLabelKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') commitEditingLabel()
     if (e.key === 'Escape') { setEditingLabelId(null); setEditingText('') }
@@ -488,6 +498,9 @@ export function BinEditor({
           onToggleSmoothed={onToggleSmoothed}
           onSmoothLevelChange={onSmoothLevelChange}
           onUpdateLabel={updateSelectedLabel}
+          defaultCutoutDepth={defaultCutoutDepth}
+          maxCutoutDepth={maxCutoutDepth}
+          onSetCutoutDepthOverride={setCutoutDepthOverride}
         />
       </div>
       <BinEditorCanvas

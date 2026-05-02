@@ -22,6 +22,9 @@ interface Props {
   onToggleSmoothed?: (toolId: string, smoothed: boolean) => void
   onSmoothLevelChange?: (toolId: string, level: number) => void
   onUpdateLabel: (updates: Partial<TextLabel>) => void
+  defaultCutoutDepth: number
+  maxCutoutDepth: number
+  onSetCutoutDepthOverride: (toolId: string, depth: number | null) => void
 }
 
 const tbBtn = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-[7px] text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap'
@@ -44,6 +47,9 @@ export function BinEditorToolbar({
   onToggleSmoothed,
   onSmoothLevelChange,
   onUpdateLabel,
+  defaultCutoutDepth,
+  maxCutoutDepth,
+  onSetCutoutDepthOverride,
 }: Props) {
   return (
     <>
@@ -110,6 +116,41 @@ export function BinEditorToolbar({
               className="w-16 h-1 accent-accent"
             />
           )}
+          <div
+            className="flex items-center gap-1 text-[10px] text-text-muted"
+            title={`Cutout depth (mm). Default: ${defaultCutoutDepth.toFixed(1)}mm. Max: ${maxCutoutDepth.toFixed(1)}mm.`}
+          >
+            <span>Depth</span>
+            <input
+              type="number"
+              value={selectedTool.depth_override ?? ''}
+              placeholder={defaultCutoutDepth.toFixed(1)}
+              min={5}
+              max={maxCutoutDepth}
+              step={0.5}
+              onChange={e => {
+                const v = e.target.value
+                if (v === '') {
+                  onSetCutoutDepthOverride(selectedTool.id, null)
+                  return
+                }
+                const n = parseFloat(v)
+                if (Number.isNaN(n)) return
+                const clamped = Math.max(5, Math.min(maxCutoutDepth, n))
+                onSetCutoutDepthOverride(selectedTool.id, clamped)
+              }}
+              className="w-12 px-1 py-1 bg-elevated border border-border-subtle rounded-[6px] text-text-primary text-[10px] text-center outline-none focus:border-accent"
+            />
+            {selectedTool.depth_override != null && (
+              <button
+                onClick={() => onSetCutoutDepthOverride(selectedTool.id, null)}
+                className="text-[10px] text-text-muted hover:text-text-secondary px-1"
+                title="Reset to default"
+              >
+                ×
+              </button>
+            )}
+          </div>
           {onEditTool && (
             <button
               onClick={() => onEditTool(selectedTool.tool_id)}
