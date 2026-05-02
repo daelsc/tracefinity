@@ -1,8 +1,73 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { MousePointer2, Trash2, Magnet, Type, Pencil, Maximize2 } from 'lucide-react'
 import type { FingerHole, PlacedTool, TextLabel } from '@/types'
 import { SNAP_GRID } from '@/lib/constants'
+
+interface DepthInputProps {
+  value: number | null | undefined
+  defaultDepth: number
+  maxDepth: number
+  onCommit: (depth: number | null) => void
+  resetKey: string
+}
+
+function DepthInput({ value, defaultDepth, maxDepth, onCommit, resetKey }: DepthInputProps) {
+  const [text, setText] = useState<string>(value == null ? '' : String(value))
+
+  // sync local text when the selected item changes (resetKey switches)
+  useEffect(() => {
+    setText(value == null ? '' : String(value))
+  }, [resetKey, value])
+
+  const commit = (raw: string) => {
+    const trimmed = raw.trim()
+    if (trimmed === '') {
+      onCommit(null)
+      return
+    }
+    const n = parseFloat(trimmed)
+    if (Number.isNaN(n)) {
+      // revert local text to last committed value
+      setText(value == null ? '' : String(value))
+      return
+    }
+    const clamped = Math.max(5, Math.min(maxDepth, n))
+    setText(String(clamped))
+    onCommit(clamped)
+  }
+
+  return (
+    <>
+      <input
+        type="number"
+        value={text}
+        placeholder={defaultDepth.toFixed(1)}
+        step={0.5}
+        onChange={e => setText(e.target.value)}
+        onBlur={e => commit(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur()
+          if (e.key === 'Escape') {
+            setText(value == null ? '' : String(value))
+            ;(e.currentTarget as HTMLInputElement).blur()
+          }
+        }}
+        className="w-12 px-1 py-1 bg-elevated border border-border-subtle rounded-[6px] text-text-primary text-[10px] text-center outline-none focus:border-accent"
+      />
+      {value != null && (
+        <button
+          onClick={() => { setText(''); onCommit(null) }}
+          className="text-[10px] text-text-muted hover:text-text-secondary px-1"
+          title="Reset to default"
+        >
+          ×
+        </button>
+      )}
+    </>
+  )
+}
 
 type Tool = 'select' | 'text'
 
@@ -127,35 +192,13 @@ export function BinEditorToolbar({
             title={`Cutout depth (mm). Default: ${defaultCutoutDepth.toFixed(1)}mm. Max: ${maxCutoutDepth.toFixed(1)}mm.`}
           >
             <span>Depth</span>
-            <input
-              type="number"
-              value={selectedTool.depth_override ?? ''}
-              placeholder={defaultCutoutDepth.toFixed(1)}
-              min={5}
-              max={maxCutoutDepth}
-              step={0.5}
-              onChange={e => {
-                const v = e.target.value
-                if (v === '') {
-                  onSetCutoutDepthOverride(selectedTool.id, null)
-                  return
-                }
-                const n = parseFloat(v)
-                if (Number.isNaN(n)) return
-                const clamped = Math.max(5, Math.min(maxCutoutDepth, n))
-                onSetCutoutDepthOverride(selectedTool.id, clamped)
-              }}
-              className="w-12 px-1 py-1 bg-elevated border border-border-subtle rounded-[6px] text-text-primary text-[10px] text-center outline-none focus:border-accent"
+            <DepthInput
+              value={selectedTool.depth_override}
+              defaultDepth={defaultCutoutDepth}
+              maxDepth={maxCutoutDepth}
+              onCommit={(d) => onSetCutoutDepthOverride(selectedTool.id, d)}
+              resetKey={`tool:${selectedTool.id}`}
             />
-            {selectedTool.depth_override != null && (
-              <button
-                onClick={() => onSetCutoutDepthOverride(selectedTool.id, null)}
-                className="text-[10px] text-text-muted hover:text-text-secondary px-1"
-                title="Reset to default"
-              >
-                ×
-              </button>
-            )}
           </div>
           {onEditTool && (
             <button
@@ -246,35 +289,13 @@ export function BinEditorToolbar({
             title={`Cutout depth (mm). Default: ${defaultCutoutDepth.toFixed(1)}mm. Max: ${maxCutoutDepth.toFixed(1)}mm. Set deeper than the tool to clear protruding features.`}
           >
             <span>Depth</span>
-            <input
-              type="number"
-              value={selectedHole.depth_override ?? ''}
-              placeholder={defaultCutoutDepth.toFixed(1)}
-              min={5}
-              max={maxCutoutDepth}
-              step={0.5}
-              onChange={e => {
-                const v = e.target.value
-                if (v === '') {
-                  onSetHoleDepthOverride(selectedHoleToolId, selectedHole.id, null)
-                  return
-                }
-                const n = parseFloat(v)
-                if (Number.isNaN(n)) return
-                const clamped = Math.max(5, Math.min(maxCutoutDepth, n))
-                onSetHoleDepthOverride(selectedHoleToolId, selectedHole.id, clamped)
-              }}
-              className="w-12 px-1 py-1 bg-elevated border border-border-subtle rounded-[6px] text-text-primary text-[10px] text-center outline-none focus:border-accent"
+            <DepthInput
+              value={selectedHole.depth_override}
+              defaultDepth={defaultCutoutDepth}
+              maxDepth={maxCutoutDepth}
+              onCommit={(d) => onSetHoleDepthOverride(selectedHoleToolId, selectedHole.id, d)}
+              resetKey={`hole:${selectedHoleToolId}:${selectedHole.id}`}
             />
-            {selectedHole.depth_override != null && (
-              <button
-                onClick={() => onSetHoleDepthOverride(selectedHoleToolId, selectedHole.id, null)}
-                className="text-[10px] text-text-muted hover:text-text-secondary px-1"
-                title="Reset to default"
-              >
-                ×
-              </button>
-            )}
           </div>
         </>
       )}
