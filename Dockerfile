@@ -14,6 +14,14 @@ RUN npm run build
 
 FROM python:3.12-slim
 
+ARG TRACEFINITY_VERSION=dev
+LABEL org.opencontainers.image.title="Tracefinity"
+LABEL org.opencontainers.image.description="Generate custom gridfinity bins from photos of your tools (AI-traced, local IS-Net or Gemini)."
+LABEL org.opencontainers.image.source="https://github.com/tracefinity/tracefinity"
+LABEL org.opencontainers.image.url="https://tracefinity.net"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.version="${TRACEFINITY_VERSION}"
+
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
