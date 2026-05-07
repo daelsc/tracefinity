@@ -74,18 +74,18 @@ class PolygonsRequest(BaseModel):
 class BinParams(BaseModel):
     grid_x: int = 2
     grid_y: int = 2
-    height_units: int = 4
+    height_units: int = 3
     magnets: bool = True
     magnet_diameter: float = 6.0
-    magnet_depth: float = 2.4
+    magnet_depth: float = 2.1
     magnet_corners_only: bool = False
-    stacking_lip: bool = True
+    stacking_lip: bool = False
     wall_thickness: float = 1.6
     cutout_depth: float = 20.0
-    cutout_clearance: float = 1.0
+    cutout_clearance: float = 1.5
     insert_enabled: bool = False
     insert_height: float = 1.0
-    cutout_chamfer: float = 0.0
+    cutout_chamfer: float = 2.0
 
     @field_validator("grid_x", "grid_y")
     @classmethod
